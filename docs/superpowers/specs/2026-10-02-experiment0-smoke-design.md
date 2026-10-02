@@ -397,3 +397,20 @@ refuted. It ends with a recommendation; the decision is the owner's.
   here; noted as a possible revision of the question.
 - **Added topologies** (lopsided diamond, ring7) go beyond the kickoff's
   §19 list. They are required by A5, not chosen after seeing results.
+
+## 16. Added after the final review
+
+These were not part of the design above and were added once the results had
+been inspected. They are post-hoc.
+
+- `nexthop_acc_fair`: a tie scores the share of tied hops that are optimal.
+  The planned lowest-id tie-break let node numbering decide some tallies.
+- `loop_flux`: the wrapped M3-H phase around the scenario's cycle. On a
+  single-cycle graph it is the only gauge-invariant content of an orientation.
+- `src/phaseflow/analysis.py` and `results/experiment0-smoke/posthoc.json`:
+  the comparisons against M2, the cost-sensitive subset, flux-sign tables, a
+  mirrored-ring check and a full flux scan on the lopsided diamond.
+- Known defect in the orientation set: `random:4` equals `id` on graphs with
+  at most seven edges, and `id` equals `oracle_hops` on the diamond and
+  lopsided scenarios. A later experiment should sweep flux directly or assert
+  that the conventions are pairwise distinct.
