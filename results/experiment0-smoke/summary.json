@@ -1,0 +1,147 @@
+{
+  "n_static_rows": 4575,
+  "n_unstable_rows": 692,
+  "control_checks": {
+    "tree_gauge_max_rel_diff": 1.3329130462845987e-15,
+    "diamond_m3h_split_max_dev": 7.271960811294775e-15,
+    "tree_cells_all_correct": {
+      "M0": 0.9365079365079365,
+      "M1": 0.9365079365079365,
+      "M2": 1.0,
+      "M3H": 1.0,
+      "M3S": 0.9895833333333334
+    }
+  },
+  "transfer_by_group": {
+    "M0": {
+      "n_cells": 25,
+      "n_stable_all": 13,
+      "n_perfect": 5,
+      "mean_acc_quartiles": [
+        0.9536796536796537,
+        0.9688311688311688,
+        0.987012987012987,
+        1.0,
+        1.0
+      ],
+      "best_cell": {
+        "variant": "M0",
+        "param": 2.0,
+        "gamma": 1.0,
+        "min_acc": 1.0,
+        "mean_acc": 1.0,
+        "min_delivered": 1.0
+      }
+    },
+    "M1": {
+      "n_cells": 25,
+      "n_stable_all": 13,
+      "n_perfect": 5,
+      "mean_acc_quartiles": [
+        0.9536796536796537,
+        0.9688311688311688,
+        0.987012987012987,
+        1.0,
+        1.0
+      ],
+      "best_cell": {
+        "variant": "M1",
+        "param": 2.0,
+        "gamma": 1.0,
+        "min_acc": 1.0,
+        "mean_acc": 1.0,
+        "min_delivered": 1.0
+      }
+    },
+    "M2": {
+      "n_cells": 5,
+      "n_stable_all": 5,
+      "n_perfect": 0,
+      "mean_acc_quartiles": [
+        0.9255411255411254,
+        0.9255411255411254,
+        0.9255411255411254,
+        0.9255411255411254,
+        0.9255411255411254
+      ],
+      "best_cell": {
+        "variant": "M2",
+        "param": 0.0,
+        "gamma": 0.1,
+        "min_acc": 0.7142857142857143,
+        "mean_acc": 0.9255411255411254,
+        "min_delivered": 1.0
+      }
+    },
+    "M3H": {
+      "n_cells": 175,
+      "n_stable_all": 175,
+      "n_perfect": 0,
+      "mean_acc_quartiles": [
+        0.7255411255411256,
+        0.8785714285714286,
+        0.9255411255411254,
+        0.9255411255411254,
+        0.9255411255411254
+      ],
+      "best_cell": {
+        "variant": "M3H[id]",
+        "param": 0.25,
+        "gamma": 1.0,
+        "min_acc": 0.7142857142857143,
+        "mean_acc": 0.9255411255411254,
+        "min_delivered": 1.0
+      }
+    },
+    "M3H-oracle (diagnostic)": {
+      "n_cells": 25,
+      "n_stable_all": 25,
+      "n_perfect": 0,
+      "mean_acc_quartiles": [
+        0.7982683982683983,
+        0.8952380952380952,
+        0.9255411255411254,
+        0.9255411255411254,
+        0.9255411255411254
+      ],
+      "best_cell": {
+        "variant": "M3H[oracle_hops]",
+        "param": 0.25,
+        "gamma": 0.3,
+        "min_acc": 0.7142857142857143,
+        "mean_acc": 0.9255411255411254,
+        "min_delivered": 1.0
+      }
+    },
+    "M3S": {
+      "n_cells": 50,
+      "n_stable_all": 21,
+      "n_perfect": 0,
+      "mean_acc_quartiles": [
+        0.88008658008658,
+        0.8952380952380953,
+        0.9103896103896104,
+        0.9255411255411254,
+        0.9536796536796537
+      ],
+      "best_cell": {
+        "variant": "M3S[theta0=-pi/2]",
+        "param": 0.5,
+        "gamma": 3.5,
+        "min_acc": 0.8,
+        "mean_acc": 0.9536796536796537,
+        "min_delivered": 1.0
+      }
+    },
+    "M3H worst arbitrary orientation": {
+      "n_cells": 25,
+      "n_perfect": 0,
+      "best_cell": {
+        "param": 0.25,
+        "gamma": 1.0,
+        "min_acc": 0.7142857142857143,
+        "mean_acc": 0.9255411255411254
+      }
+    }
+  }
+}
