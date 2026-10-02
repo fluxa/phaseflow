@@ -60,10 +60,13 @@ x_i ← x_i + α_i ( -γ x_i + Σ_j K_ij x_j + b_i )
 α_i = γ / (γ² + s_i²),      s_i = Σ_{j∈N(i)} ‖K_ij‖₂
 ```
 
-`α_i` uses only quantities node `i` already has. For Hermitian models with
-uniform degree it is at most half the forward-Euler stability limit; for non-negative
-real couplings it is a regular splitting, so it converges whenever the
-continuous system is stable. The kickoff's §5 update omitted the factor `-i`;
+`α_i` uses only quantities node `i` already has, and is recomputed by the
+node when one of its link costs changes. For Hermitian models the iteration
+converges for every `γ > 0` on every graph (each eigenvalue `μ` of the scaled
+operator satisfies `|1 - μ|² ≤ 1 - Re μ`); for non-negative real couplings it
+is a regular splitting, so it converges whenever the continuous system is
+stable. M3-S has no such guarantee; the oracle reports the iteration's
+spectral radius per cell. The kickoff's §5 update omitted the factor `-i`;
 this form restores it.
 
 **Oracle** (validation only, never visible to nodes): exact fixed point
@@ -173,8 +176,9 @@ This is the definition of "route" for all five models.
 
 **Interference measure.** `cancellation_i = 1 - |Σ_j K_ij x_j| / Σ_j |K_ij x_j|`.
 It is 0 when contributions add in phase and 1 at perfect cancellation. It is
-identically 0 for M0 and M1. A node with cancellation above `1 - 10⁻⁶` is
-*dark*.
+computed per channel: a complex state is one channel (modulus), a real state
+is one channel per component. It is therefore identically 0 for M0 and M1. A
+node with cancellation above `1 - 10⁻⁶` is *dark*.
 
 ## 6. Pre-experiment analysis
 
@@ -331,14 +335,18 @@ results/experiment0-smoke/
   summary.json           transfer tables, control-check residuals, counts
   route_metrics.csv      static sweep, one row per scenario × model × cell
   static_readouts.csv    per directed edge P and weights for the static sweep
+  transfer.csv           per parameter cell, aggregated over cyclic scenarios
   discrimination.csv     split-vs-cost curves
   dynamic_metrics.csv    per-phase settle and route metrics
+  dynamic_series.csv     dynamic run, residual and split over time (subsampled)
   states.csv             dynamic run, per node state over time (subsampled)
   currents.csv           dynamic run, per directed edge P over time (subsampled)
   plots/
 ```
 
 Run with `uv run python -m phaseflow.experiment0`. The run is deterministic.
+Dynamic time series keep the first 60 rounds of each phase, every 50th round
+after that, and the last round of each phase.
 
 Plots: discrimination curves per model; next-hop accuracy heatmaps over the
 grid with unstable cells masked; M3-H orientation spread; cancellation
@@ -357,7 +365,8 @@ src/phaseflow/
   readout.py        power inflow, weights, cancellation, forwarding policy
   metrics.py        routes, accuracy, stretch, loops, stochastic policy
   perturbations.py  cost-change schedule
-  experiment0.py    scenarios, grid, runner, CSV/JSON writers
+  scenarios.py      scenarios, parameter grid, curves, dynamic cases
+  experiment0.py    static sweep, dynamic run, summaries, CSV/JSON writers
   plots.py
 tests/
 ```
