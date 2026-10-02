@@ -1,0 +1,19 @@
+[project]
+name = "phaseflow"
+version = "0.1.0"
+description = "Exploratory study of interference-based routing fields on classical networks"
+requires-python = ">=3.12"
+dependencies = ["numpy>=2.0", "networkx>=3.3", "pandas>=2.2", "matplotlib>=3.9"]
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/phaseflow"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
