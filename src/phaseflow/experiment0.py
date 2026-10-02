@@ -1,8 +1,15 @@
 """Experiment 0 smoke test: static sweep, discrimination curves, dynamic run."""
 from __future__ import annotations
 
+import argparse
+import dataclasses
+import json
 import math
+import platform
+import subprocess
 from dataclasses import dataclass
+from importlib.metadata import version
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -10,7 +17,7 @@ import pandas as pd
 from . import engine, metrics, oracle, readout
 from .models import Model
 from .perturbations import phases
-from .scenarios import Config, Scenario
+from .scenarios import Config, Scenario, full_config, quick_config
 
 STABLE_TOL = 1e-9
 SETTLE_TOL = 1e-6
@@ -246,3 +253,107 @@ def run_all_dynamic(cfg: Config) -> DynamicResult:
         pd.concat([getattr(run, name) for run in runs], ignore_index=True)
         for name in ("phases", "series", "states", "currents")
     ))
+
+
+def _clean(obj):
+    """Make an object JSON-safe: numpy scalars to Python, non-finite floats to null."""
+    if isinstance(obj, dict):
+        return {str(key): _clean(value) for key, value in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_clean(value) for value in obj]
+    if isinstance(obj, np.generic):
+        obj = obj.item()
+    if isinstance(obj, float) and not math.isfinite(obj):
+        return None
+    return obj
+
+
+def _git(*args: str) -> str | None:
+    try:
+        done = subprocess.run(
+            ["git", *args], capture_output=True, text=True, check=True, cwd=Path(__file__).parent
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    return done.stdout.strip()
+
+
+def _scenario(scn: Scenario) -> dict:
+    return {
+        "name": scn.name, "family": scn.family, "dest": scn.dest, "n": scn.graph.n,
+        "costs": [[i, j, scn.graph.cost(i, j)] for i, j in scn.graph.edges],
+    }
+
+
+def describe(cfg: Config) -> dict:
+    """Everything needed to reproduce the run. No wall-clock values."""
+    return {
+        "gammas": cfg.gammas,
+        "models": [dataclasses.asdict(m) for m in cfg.models],
+        "scenarios": [_scenario(s) for s in cfg.scenarios],
+        "curves": [
+            {"name": c.name, "crossover": c.crossover, "swept_costs": [cost for cost, _ in c.points]}
+            for c in cfg.curves
+        ],
+        "curve_models": [dataclasses.asdict(m) for m in cfg.curve_models],
+        "curve_gammas": cfg.curve_gammas,
+        "dynamic_cases": [
+            {
+                "scenario": _scenario(case.scenario), "total_rounds": case.total_rounds,
+                "changes": [dataclasses.asdict(change) for change in case.changes],
+            }
+            for case in cfg.dynamic_cases
+        ],
+        "dynamic_models": [dataclasses.asdict(m) for m in cfg.dynamic_models],
+        "dynamic_gammas": cfg.dynamic_gammas,
+        "tolerances": {
+            "stable": STABLE_TOL, "settle": SETTLE_TOL, "diverge_at": DIVERGE_AT,
+            "log_dense": LOG_DENSE, "log_every": LOG_EVERY,
+        },
+        "seeds": {"path6_rand": 1, "btree7": 2, "random_orientations": [0, 1, 2, 3, 4]},
+        "versions": {
+            "python": platform.python_version(),
+            **{name: version(name) for name in ("numpy", "networkx", "pandas", "matplotlib")},
+        },
+        "git_commit": _git("rev-parse", "HEAD"),
+    }
+
+
+def main(out_dir="results/experiment0-smoke", quick: bool = False, make_plots: bool = True) -> dict:
+    cfg = quick_config() if quick else full_config()
+    out = Path(out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    static = run_static(cfg.scenarios, cfg.models, cfg.gammas)
+    disc = run_discrimination(cfg)
+    dyn = run_all_dynamic(cfg)
+    transfer = transfer_table(static.metrics)
+    summary = _clean({
+        "n_static_rows": len(static.metrics),
+        "n_unstable_rows": int((~static.metrics["stable"]).sum()),
+        "control_checks": control_checks(static),
+        "transfer_by_group": summarize_groups(transfer),
+    })
+    tables = {
+        "route_metrics": static.metrics, "static_readouts": static.readouts, "transfer": transfer,
+        "discrimination": disc, "dynamic_metrics": dyn.phases, "dynamic_series": dyn.series,
+        "states": dyn.states, "currents": dyn.currents,
+    }
+    for name, table in tables.items():
+        table.to_csv(out / f"{name}.csv", index=False, float_format="%.8g")
+    (out / "summary.json").write_text(json.dumps(summary, indent=2) + "\n")
+    (out / "config.json").write_text(json.dumps(_clean(describe(cfg)), indent=2) + "\n")
+    if make_plots:
+        from . import plots
+
+        plots.make_all(out)
+    return summary
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="Run the Experiment 0 smoke test.")
+    parser.add_argument("--out", default="results/experiment0-smoke")
+    parser.add_argument("--quick", action="store_true", help="small configuration used by the tests")
+    parser.add_argument("--no-plots", action="store_true")
+    args = parser.parse_args()
+    result = main(args.out, quick=args.quick, make_plots=not args.no_plots)
+    print(json.dumps(result["control_checks"], indent=2))
