@@ -71,7 +71,7 @@ def plot_discrimination(disc: pd.DataFrame, plots: Path) -> list[Path]:
             ax.set_visible(False)
         handles = [Line2D([], [], color=ORDINAL[min(i, 2)], label=f"β or κ = {p:g}") for i, p in enumerate(params)]
         handles += [Line2D([], [], color=MUTED, linestyle="-" if i == 0 else "--", label=f"γ = {g:g}") for i, g in enumerate(gammas)]
-        fig.legend(handles=handles, loc="outside lower center", ncol=len(handles))
+        fig.legend(handles=handles, loc="outside right upper")
         fig.supxlabel("swept cost on the lower arm (the arms cost the same at the vertical line)", color=MUTED, fontsize=9)
         fig.supylabel("share of A's forwarding weight on the upper arm", color=MUTED, fontsize=9)
         fig.suptitle(f"{curve}: a correct model is below 0.5 left of the line and above 0.5 right of it")
@@ -101,7 +101,7 @@ def plot_accuracy_heatmaps(transfer: pd.DataFrame, plots: Path) -> list[Path]:
     image = None
     for ax, (title, grid) in zip(axes.flat, panels.items()):
         image = ax.imshow(
-            np.ma.masked_invalid(grid.to_numpy(dtype=float)), cmap=SEQUENTIAL, vmin=0, vmax=1,
+            np.ma.masked_invalid(grid.to_numpy(dtype=float)), cmap=SEQUENTIAL, vmin=0.7, vmax=1,
             origin="lower", aspect="auto",
         )
         ax.set_xticks(range(len(grid.columns)), [f"{c:g}" for c in grid.columns])
@@ -113,7 +113,7 @@ def plot_accuracy_heatmaps(transfer: pd.DataFrame, plots: Path) -> list[Path]:
     for ax in axes.flat[len(panels):]:
         ax.set_visible(False)
     fig.suptitle("Mean next-hop accuracy over cyclic scenarios (grey: unstable on at least one)")
-    fig.colorbar(image, ax=axes, shrink=0.8, label="share of nodes forwarding along a shortest path")
+    fig.colorbar(image, ax=axes, shrink=0.8, label="share of nodes forwarding along a shortest path\n(colour scale starts at 0.7)")
     return [_save(fig, plots / "accuracy_heatmaps.png")]
 
 

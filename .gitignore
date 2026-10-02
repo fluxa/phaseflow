@@ -6,3 +6,8 @@ __pycache__/
 .DS_Store
 .nodeterm/
 .superpowers/
+
+# Regenerable in seconds with `uv run python -m phaseflow.experiment0`
+results/experiment0-smoke/states.csv
+results/experiment0-smoke/currents.csv
+results/experiment0-smoke/static_readouts.csv
