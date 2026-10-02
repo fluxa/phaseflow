@@ -7,7 +7,7 @@ import networkx as nx
 import numpy as np
 
 from .graph import Graph
-from .readout import next_hops, policy
+from .readout import next_hops, policy, top_hops
 
 DARK = 1 - 1e-6
 
@@ -42,8 +42,10 @@ def route_metrics(g: Graph, dest: int, W: np.ndarray, canc: np.ndarray) -> dict:
     dist, opt = shortest(g, dest)
     nxt, ties = next_hops(W, dest)
     nodes = [i for i in range(g.n) if i != dest]
-    statuses, stretches, margins = [], [], []
+    statuses, stretches, margins, fair = [], [], [], []
     for i in nodes:
+        top = top_hops(W, i)
+        fair.append(float(np.mean([int(j) in opt[i] for j in top])) if len(top) else 0.0)
         status, route = follow(nxt, i, dest)
         statuses.append(status)
         if status == "delivered":
@@ -56,6 +58,8 @@ def route_metrics(g: Graph, dest: int, W: np.ndarray, canc: np.ndarray) -> dict:
     seen = c[~np.isnan(c)]
     return {
         "nexthop_acc": float(np.mean([int(nxt[i]) in opt[i] for i in nodes])),
+        # A tie scores the share of tied hops that are optimal, so node numbering cannot help or hurt.
+        "nexthop_acc_fair": float(np.mean(fair)),
         "delivered_frac": statuses.count("delivered") / len(nodes),
         "n_loop_nodes": statuses.count("loop"),
         "n_dead_nodes": statuses.count("dead"),

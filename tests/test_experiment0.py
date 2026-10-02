@@ -77,3 +77,18 @@ def test_discrimination_curves_cover_both_graphs():
     assert set(disc["curve"]) == {"diamond", "lopsided"}
     m0 = disc[(disc["curve"] == "diamond") & (disc["variant"] == "M0")].sort_values("swept_cost")
     assert m0["split_upper"].is_monotonic_increasing  # dearer lower arm -> more weight on the upper arm
+
+
+def test_m3h_rows_carry_the_loop_flux_and_other_models_do_not():
+    lop = BY_NAME["lop_unit"]
+    forward, _ = experiment0.evaluate(lop, Model("M3H", beta=1.0, orientation="id"), 0.3)
+    backward, _ = experiment0.evaluate(lop, Model("M3H", beta=1.0, orientation="reverse"), 0.3)
+    assert forward["loop_flux"] == pytest.approx(-backward["loop_flux"]) and forward["loop_flux"] != 0
+    assert math.isnan(experiment0.evaluate(lop, Model("M0", kappa=2.0), 1.0)[0]["loop_flux"])
+    assert math.isnan(experiment0.evaluate(BY_NAME["path6"], Model("M3H", beta=1.0), 0.3)[0]["loop_flux"])
+
+
+def test_tie_between_an_optimal_and_a_wrong_hop_scores_half_under_fair_accuracy():
+    row, _ = experiment0.evaluate(BY_NAME["diamond_lower+1.0"], Model("M2"), 1.0)
+    assert row["n_ties"] == 1 and row["nexthop_acc"] == 1.0  # right only because B has the lower id
+    assert row["nexthop_acc_fair"] == pytest.approx(5.5 / 6)

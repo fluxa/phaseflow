@@ -34,19 +34,27 @@ def cancellation(K: np.ndarray, x: np.ndarray, is_complex: bool) -> np.ndarray:
     return 1.0 - out
 
 
+def top_hops(W: np.ndarray, i: int, rtol: float = 1e-9) -> np.ndarray:
+    """Neighbours whose weight ties for the largest at node i. Empty if none is positive."""
+    best = W[i].max()
+    if best <= 0:
+        return np.array([], dtype=int)
+    return np.flatnonzero(W[i] >= best * (1 - rtol))
+
+
 def next_hops(W: np.ndarray, dest: int, rtol: float = 1e-9) -> tuple[np.ndarray, np.ndarray]:
-    """Deterministic next hop per node (-1 if no positive weight) and a tie flag."""
+    """Deterministic next hop per node (-1 if no positive weight) and a tie flag.
+
+    Ties go to the lowest node id.
+    """
     n = W.shape[0]
     nxt = np.full(n, -1, dtype=int)
     ties = np.zeros(n, dtype=bool)
     nxt[dest] = dest
     for i in range(n):
-        if i == dest:
+        top = top_hops(W, i, rtol)
+        if i == dest or len(top) == 0:
             continue
-        best = W[i].max()
-        if best <= 0:
-            continue
-        top = np.flatnonzero(W[i] >= best * (1 - rtol))
         nxt[i] = top[0]
         ties[i] = len(top) > 1
     return nxt, ties

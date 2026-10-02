@@ -38,6 +38,20 @@ def orientation_signs(g: Graph, convention: str, dest: int) -> dict[tuple[int, i
     raise ValueError(f"unknown orientation convention {convention!r}")
 
 
+def loop_flux(g: Graph, signs: dict[tuple[int, int], int], beta: float, cycle: tuple[int, ...]) -> float:
+    """Net M3-H phase around the cycle in the order given, wrapped to [-pi, pi].
+
+    On a graph with one cycle this is the only gauge-invariant content of an
+    orientation: two orientations with the same flux give the same observables.
+    """
+    total = 0.0
+    for t, a in enumerate(cycle):
+        b = cycle[(t + 1) % len(cycle)]  # the hop a -> b uses H[b, a]
+        sigma = signs[(min(a, b), max(a, b))] * (1 if b < a else -1)
+        total += sigma * beta * g.cost(a, b)
+    return math.remainder(total, 2 * math.pi)
+
+
 @dataclass(frozen=True)
 class Model:
     kind: str

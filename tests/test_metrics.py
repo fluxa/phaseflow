@@ -90,3 +90,18 @@ def test_circulation_and_split_share():
     W[1, 2], W[1, 3] = 3, 1
     assert metrics.split_share(W, 1, 2, 3) == pytest.approx(0.75)
     assert math.isnan(metrics.split_share(W, 0, 2, 3))
+
+
+def test_fair_accuracy_scores_a_tie_by_the_share_of_tied_hops_that_are_optimal():
+    W = np.zeros((7, 7))
+    W[0, 1] = 1
+    W[1, 2] = W[1, 3] = 1  # exact tie at A between B and C
+    W[2, 4] = W[4, 6] = W[3, 5] = W[5, 6] = 1
+    upper_dearer = topology.diamond().with_cost(2, 4, 2.0)  # only C is optimal at A
+    m = metrics.route_metrics(upper_dearer, 6, W, np.zeros(7))
+    assert m["nexthop_acc"] == pytest.approx(5 / 6)  # lowest id picks B: wrong
+    assert m["nexthop_acc_fair"] == pytest.approx(5.5 / 6)
+    lower_dearer = topology.diamond().with_cost(3, 5, 2.0)  # lowest id happens to be right
+    m = metrics.route_metrics(lower_dearer, 6, W, np.zeros(7))
+    assert m["nexthop_acc"] == 1.0
+    assert m["nexthop_acc_fair"] == pytest.approx(5.5 / 6)

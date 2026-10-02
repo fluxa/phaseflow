@@ -84,3 +84,36 @@ def test_stability_regions():
     Ks = Model("M3S", beta=1.0).coupling(G, DEST)
     assert oracle.abscissa(Ks, 0.1) > 0
     assert oracle.abscissa(Ks, 3.5) < 0  # 3.5 exceeds a * deg_max = 3
+
+
+def test_loop_flux_is_odd_under_reversal_and_wrapped():
+    from phaseflow.models import loop_flux
+
+    g = topology.random_costs(topology.ring(7), 5)
+    cycle = tuple(range(7))
+    forward = loop_flux(g, orientation_signs(g, "id", 0), 0.3, cycle)
+    backward = loop_flux(g, orientation_signs(g, "reverse", 0), 0.3, cycle)
+    assert forward == pytest.approx(-backward) and abs(forward) > 0.1
+    assert abs(loop_flux(g, orientation_signs(g, "id", 0), 50.0, cycle)) <= np.pi
+
+
+def test_only_the_loop_flux_of_an_orientation_matters_on_a_single_cycle():
+    from phaseflow import readout
+    from phaseflow.models import loop_flux
+
+    g, cycle, gamma = topology.ring(8), tuple(range(8)), 0.3  # unit costs: flux = beta * sum of signs
+
+    def observe(convention):
+        m = Model("M3H", beta=0.4, orientation=convention)
+        K = m.coupling(g, 0)
+        flux = loop_flux(g, orientation_signs(g, convention, 0), 0.4, cycle)
+        return tuple(orientation_signs(g, convention, 0).values()), flux, readout.power_inflow(
+            K, oracle.fixed_point(K, m.source(g.n, 0), gamma)
+        )
+
+    seen = [observe(f"random:{s}") for s in range(40)]
+    same = [(a, b) for a in seen for b in seen if a[0] != b[0] and abs(a[1] - b[1]) < 1e-12]
+    different = [(a, b) for a in seen for b in seen if abs(abs(a[1]) - abs(b[1])) > 1e-6]
+    assert same and different
+    assert all(np.allclose(a[2], b[2], atol=1e-12) for a, b in same)
+    assert not np.allclose(different[0][0][2], different[0][1][2], atol=1e-6)

@@ -15,7 +15,7 @@ import numpy as np
 import pandas as pd
 
 from . import engine, metrics, oracle, readout
-from .models import Model
+from .models import Model, loop_flux, orientation_signs
 from .perturbations import phases
 from .scenarios import Config, Scenario, full_config, quick_config
 
@@ -26,7 +26,7 @@ LOG_DENSE = 60
 LOG_EVERY = 50
 ID_COLS = ["scenario", "family", "kind", "variant", "param", "gamma"]
 METRIC_COLS = [
-    "nexthop_acc", "delivered_frac", "n_loop_nodes", "n_dead_nodes", "n_ties", "n_dark_nodes",
+    "nexthop_acc", "nexthop_acc_fair", "delivered_frac", "n_loop_nodes", "n_dead_nodes", "n_ties", "n_dark_nodes",
     "mean_stretch", "max_stretch", "mean_cancellation", "max_cancellation", "min_margin",
     "p_delivery_min", "exp_stretch_mean", "entropy_mean", "circulation", "split_upper",
 ]
@@ -50,8 +50,12 @@ def evaluate(scn: Scenario, model: Model, gamma: float) -> tuple[dict, np.ndarra
         **_ids(scn, model, gamma),
         "abscissa": absc, "rho_discrete": rho,
         "stable": absc < -STABLE_TOL, "converges": rho < 1 - STABLE_TOL,
+        "loop_flux": math.nan,
         **dict.fromkeys(METRIC_COLS, math.nan),
     }
+    if model.kind == "M3H" and scn.cycle:
+        signs = orientation_signs(g, model.orientation, dest)
+        row["loop_flux"] = loop_flux(g, signs, model.beta, scn.cycle)
     if not row["stable"]:
         return row, None
     x = oracle.fixed_point(K, b, gamma)
