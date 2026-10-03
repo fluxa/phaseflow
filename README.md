@@ -1,5 +1,9 @@
 # PhaseFlow
 
+**Archived, 2026-10-03.** Experiment 0 returned a negative result and the
+project is closed. Read `docs/phaseflow_tech_report.md` first; it is the
+record. Everything else here is kept so that the result can be reproduced.
+
 Exploratory study of whether interference in a locally propagated complex
 field is a useful routing signal on classical networks. Start with
 `docs/phaseflow_kickoff.md` and `docs/phaseflow_research_charter.md`.
