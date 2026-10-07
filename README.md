@@ -96,3 +96,7 @@ Closed. The project is kept so that the negative result can be checked and
 reproduced. The one open thread noted in the report is that a single
 forwarding readout was tested; a phase-reading alternative would be a
 different hypothesis.
+
+## License
+
+[MIT](LICENSE).
